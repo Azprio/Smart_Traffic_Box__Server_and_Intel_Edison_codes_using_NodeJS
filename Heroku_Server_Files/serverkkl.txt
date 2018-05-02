@@ -1,0 +1,149 @@
+var mysql = require('mysql');
+var mqtt = require('mqtt')
+
+
+//MySQL database connection
+var con = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "datasoft_training_final_project"
+});
+
+
+//MQTT Connection 
+var client  = mqtt.connect('mqtt://iot.eclipse.org')
+client.on('connect', function () {
+  client.subscribe('ridoy123')
+})
+ 
+client.on('message', function (topic, message) {
+  // message is Buffer
+  console.log(message.toString())
+
+var a = message.toString();
+  var b = a.split("|");
+  var c = b.shift();
+  console.log(c); 
+  var d= b[0];
+  console.log(b.length);
+  b.forEach(function(element) {
+      
+    
+    if (b.indexOf(element)>0){
+            //console.log(element);
+            d +="|"+element;
+    }
+   function return_e(){
+    
+
+    var traffic_cordinate = element;
+
+    con.query("SELECT * FROM tbl_traffic_points WHERE cordinate = ?",[traffic_cordinate], function (err, result) {
+      if (err) throw err;
+       var traffic_info = JSON.parse(JSON.stringify(result));
+      var f = traffic_info[0].neighber_list;  
+     // console.log(f);
+        var g = f.split(",");
+        if(b.indexOf(element)<b.length-1){
+        var h = b[b.indexOf(element)+1];
+        con.query("SELECT * FROM tbl_traffic_points WHERE cordinate = ?",[h], function (err, result) {
+          if (err) throw err;
+          var traffic_id = JSON.parse(JSON.stringify(result)); 
+
+          var m = traffic_id[0].id;
+          //console.log(m);
+          var e = b.indexOf(element)+"-"+c;
+          g.forEach(function(element){
+
+            //console.log(element);
+            var n = "";
+            if(element == m){
+                  n = e+"-"+"1";
+              }else{
+                n = e+"-"+"0";
+              }  
+  
+             
+           });
+       
+          });
+
+        }
+          
+           
+       });
+  
+       return e;
+  
+      }
+          
+        var o = return_e();
+         console.log(o);
+
+         
+        //console.log(traffic_info[0].temp_vehicle_list);
+
+        //if(traffic_info[0].temp_vehicle_list!=""){
+
+          // con.query(
+          //   'UPDATE tbl_traffic_points SET temp_vehicle_list = ? Where cordinate = ?',[e, element],
+          //   (err, result) => {
+          //     if (err) throw err;
+              
+          //   }
+          // );
+        //   var n = traffic_info[0].temp_vehicle_list;
+        //   var e =e+"|"+ n.toString();
+        //   console.log("Added");
+        //   console.log(e);
+        // }
+        // else{
+          
+        //   console.log("Null");
+        //   console.log(e);
+          // con.query(
+          //   'UPDATE tbl_traffic_points SET temp_vehicle_list = ? Where cordinate = ?',[e, element],
+          //   (err, result) => {
+          //     if (err) throw err;
+              
+          //   }
+          // ); 
+        //}
+    
+
+     
+
+
+
+
+        
+    
+
+  });
+  console.log(d);
+  
+
+
+
+
+  con.query(
+    'UPDATE tbl_vehicle_details SET temp_traffic_points = ? Where id = ?',[d, c],
+    (err, result) => {
+      if (err) throw err;
+    }
+  );
+
+
+// con.connect(function(err) {
+//     if (err) throw err;
+//     con.query("SELECT * FROM tbl_vehicle_details WHERE id = '1'", function (err, result) {
+//       if (err) throw err;
+//       console.log(result);
+//       var res = JSON.parse(JSON.stringify(result));
+//       console.log(res[0].id);
+//     });
+//   });
+
+  //MQTT END
+})
